@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import useAuthStore from "../store/authStore";
-import logo from "../assets/logo.png";
+import { login, register, fetchProfile, isProfileComplete } from "../services/api";
+import logo from "../assets/logo.svg";
 import "./AuthForm.css";
 
 const formVariants = {
@@ -21,7 +23,6 @@ const formVariants = {
   }),
 };
 
-/* Simple inline SVG icons */
 const MailIcon = () => (
   <svg
     className="input-group__icon"
@@ -74,16 +75,36 @@ const EyeOffIcon = () => (
 );
 
 export default function AuthForm() {
-  const { mode } = useAuthStore();
+  const navigate = useNavigate();
+  const { mode, role, loading, error, setAuth, setLoading, setError } = useAuthStore();
   const isLogin = mode === "login";
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  // Form slides opposite to the orange panel
   const direction = isLogin ? 1 : -1;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: wire up auth logic
+    setError("");
+    setLoading(true);
+
+    try {
+      const authFn = isLogin ? login : register;
+      const { token } = await authFn(role, email.trim(), password);
+      setAuth({ token, role });
+
+      const profile = await fetchProfile(role);
+      if (isProfileComplete(profile)) {
+        navigate(`/${role}`);
+      } else {
+        navigate(`/${role}/onboarding/profile`);
+      }
+    } catch (err) {
+      setError(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,6 +124,8 @@ export default function AuthForm() {
             {isLogin ? "Log In" : "Sign Up"}
           </h2>
 
+          {error && <p className="auth-error">{error}</p>}
+
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="input-group">
               <input
@@ -110,6 +133,9 @@ export default function AuthForm() {
                 type="email"
                 placeholder="Email"
                 autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
               <MailIcon />
             </div>
@@ -120,6 +146,10 @@ export default function AuthForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 autoComplete={isLogin ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
               />
               <button
                 type="button"
@@ -131,8 +161,8 @@ export default function AuthForm() {
               </button>
             </div>
 
-            <button type="submit" className="auth-submit-btn">
-              {isLogin ? "Log In" : "Sign Up"}
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
+              {loading ? "Please wait..." : isLogin ? "Log In" : "Sign Up"}
             </button>
           </form>
         </motion.div>

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import motionConfig from "../../design/motion";
 import useOnboardingStore from "../../store/onboardingStore";
+import { submitProfile } from "../../services/api";
 import CardWrapper from "../components/CardWrapper";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
@@ -15,12 +16,14 @@ const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 export default function VerificationPage() {
   const navigate = useNavigate();
   const { role } = useParams();
-  const { aadhaar, pan, setField } = useOnboardingStore();
+  const onboardingData = useOnboardingStore();
+  const { aadhaar, pan, setField } = onboardingData;
   const [aadhaarError, setAadhaarError] = useState("");
   const [panError, setPanError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [aadhaarFocused, setAadhaarFocused] = useState(false);
 
-  // Format aadhaar as XXXX XXXX XXXX
   const formatAadhaar = (val) => {
     const digits = val.replace(/\D/g, "");
     const parts = [];
@@ -30,7 +33,6 @@ export default function VerificationPage() {
     return parts.join(" ");
   };
 
-  // Mask aadhaar as XXXX XXXX 1234
   const maskAadhaar = (val) => {
     const digits = val.replace(/\D/g, "");
     if (digits.length === 12) {
@@ -67,7 +69,7 @@ export default function VerificationPage() {
     [setField],
   );
 
-  const handleNext = () => {
+  const handleNext = async () => {
     let valid = true;
     if (!AADHAAR_REGEX.test(aadhaar)) {
       setAadhaarError("Aadhaar must be 12 digits");
@@ -77,8 +79,17 @@ export default function VerificationPage() {
       setPanError("Format: ABCDE1234F");
       valid = false;
     }
-    if (valid) {
-      navigate("/dashboard");
+    if (!valid) return;
+
+    setSubmitError("");
+    setLoading(true);
+    try {
+      await submitProfile(role, onboardingData);
+      navigate(`/${role}`);
+    } catch (err) {
+      setSubmitError(err.message || "Failed to save profile");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,6 +111,7 @@ export default function VerificationPage() {
           label="Aadhaar Number"
           value={aadhaarDisplay}
           onChange={handleAadhaar}
+          onFocus={() => setAadhaarFocused(true)}
           onBlur={() => setAadhaarFocused(false)}
           placeholder="XXXX XXXX XXXX"
           error={aadhaarError}
@@ -118,18 +130,21 @@ export default function VerificationPage() {
         />
       </motion.div>
 
+      {submitError && <p className="ob-submit-error">{submitError}</p>}
+
       <div className="ob-btn-row">
         <Button
           variant="ghost"
           onClick={() => navigate(`/${role}/onboarding/address`)}
+          disabled={loading}
         >
           Back
         </Button>
         <Button
           onClick={handleNext}
-          disabled={!AADHAAR_REGEX.test(aadhaar) || !PAN_REGEX.test(pan)}
+          disabled={loading || !AADHAAR_REGEX.test(aadhaar) || !PAN_REGEX.test(pan)}
         >
-          Next
+          {loading ? "Saving..." : "Finish"}
         </Button>
       </div>
     </CardWrapper>

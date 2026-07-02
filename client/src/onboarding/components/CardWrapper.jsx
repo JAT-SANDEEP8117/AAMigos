@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import motionConfig from "../../design/motion";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.svg";
 import "./CardWrapper.css";
 
 export default function CardWrapper({ children }) {

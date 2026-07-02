@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import motionConfig from "../../design/motion";
 import useOnboardingStore from "../../store/onboardingStore";
+import { submitProfile } from "../../services/api";
 import CardWrapper from "../components/CardWrapper";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
@@ -12,10 +13,13 @@ import "./AddressPage.css";
 export default function AddressPage() {
   const navigate = useNavigate();
   const { role } = useParams();
-  const { doorNo, street, city, pincode, setField } = useOnboardingStore();
+  const onboardingData = useOnboardingStore();
+  const { doorNo, street, city, pincode, setField } = onboardingData;
   const isAgent = role === "agent";
   const totalSteps = isAgent ? 3 : 2;
   const [pincodeError, setPincodeError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handlePincode = (e) => {
     const val = e.target.value.replace(/\D/g, "");
@@ -29,7 +33,20 @@ export default function AddressPage() {
     }
   };
 
-  const handleNext = () => {
+  const handleSubmitProfile = async () => {
+    setSubmitError("");
+    setLoading(true);
+    try {
+      await submitProfile(role, onboardingData);
+      navigate(`/${role}`);
+    } catch (err) {
+      setSubmitError(err.message || "Failed to save profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
     if (pincode.length !== 6) {
       setPincodeError("Pincode must be exactly 6 digits");
       return;
@@ -37,7 +54,7 @@ export default function AddressPage() {
     if (isAgent) {
       navigate(`/${role}/onboarding/verification`);
     } else {
-      navigate("/dashboard");
+      await handleSubmitProfile();
     }
   };
 
@@ -82,23 +99,27 @@ export default function AddressPage() {
         </div>
       </motion.div>
 
+      {submitError && <p className="ob-submit-error">{submitError}</p>}
+
       <div className="ob-btn-row">
         <Button
           variant="ghost"
           onClick={() => navigate(`/${role}/onboarding/profile`)}
+          disabled={loading}
         >
           Back
         </Button>
         <Button
           onClick={handleNext}
           disabled={
+            loading ||
             !doorNo.trim() ||
             !street.trim() ||
             !city.trim() ||
             pincode.length !== 6
           }
         >
-          Next
+          {loading ? "Saving..." : isAgent ? "Next" : "Finish"}
         </Button>
       </div>
     </CardWrapper>

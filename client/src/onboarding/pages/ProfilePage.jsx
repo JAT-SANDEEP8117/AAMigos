@@ -1,9 +1,10 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import Cropper from "react-easy-crop";
 import motionConfig from "../../design/motion";
 import useOnboardingStore from "../../store/onboardingStore";
+import { fetchProfile, isProfileComplete } from "../../services/api";
 import CardWrapper from "../components/CardWrapper";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
@@ -42,9 +43,8 @@ const CameraIcon = () => (
   </svg>
 );
 
-/* Helper: get cropped image as blob URL */
 function getCroppedImg(imageSrc, pixelCrop) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const image = new Image();
     image.src = imageSrc;
     image.onload = () => {
@@ -65,12 +65,14 @@ function getCroppedImg(imageSrc, pixelCrop) {
       );
       canvas.toBlob(
         (blob) => {
-          resolve(URL.createObjectURL(blob));
+          if (blob) resolve(blob);
+          else reject(new Error("Failed to crop image"));
         },
         "image/jpeg",
         0.92,
       );
     };
+    image.onerror = () => reject(new Error("Failed to load image"));
   });
 }
 
@@ -85,12 +87,29 @@ export default function ProfilePage() {
   const isAgent = role === "agent";
   const totalSteps = isAgent ? 3 : 2;
 
-  // Crop state
   const [rawImage, setRawImage] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedArea, setCroppedArea] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    async function checkProfile() {
+      try {
+        const profile = await fetchProfile(role);
+        if (active && isProfileComplete(profile)) {
+          navigate(`/${role}`, { replace: true });
+        }
+      } catch {
+        // Stay on onboarding if profile cannot be loaded
+      }
+    }
+    checkProfile();
+    return () => {
+      active = false;
+    };
+  }, [role, navigate]);
 
   const handleFile = useCallback((file) => {
     if (file && file.type.startsWith("image/")) {
@@ -108,12 +127,18 @@ export default function ProfilePage() {
 
   const handleCropSave = useCallback(async () => {
     if (rawImage && croppedArea) {
-      const croppedUrl = await getCroppedImg(rawImage, croppedArea);
-      // Store the cropped preview
-      useOnboardingStore.setState({ avatarPreview: croppedUrl });
+      try {
+        const blob = await getCroppedImg(rawImage, croppedArea);
+        const file = new File([blob], "profile.jpg", { type: "image/jpeg" });
+        setAvatar(file);
+      } catch {
+        // Keep cropper open if crop fails
+        return;
+      }
     }
     setShowCropper(false);
-  }, [rawImage, croppedArea]);
+    setRawImage(null);
+  }, [rawImage, croppedArea, setAvatar]);
 
   const handleCropCancel = useCallback(() => {
     setShowCropper(false);
@@ -201,21 +226,21 @@ export default function ProfilePage() {
         <InputField
           label="Contact No."
           value={contact}
-          onChange={(e) => setField("contact", e.target.value)}
+          onChange={(e) => setField("contact", e.target.value.replace(/\D/g, "").slice(0, 10))}
           placeholder="Enter your contact number"
+          maxLength={10}
         />
       </motion.div>
 
       <div className="ob-btn-row ob-btn-row--end">
         <Button
           onClick={() => navigate(`/${role}/onboarding/address`)}
-          disabled={!name.trim() || !contact.trim() || !avatarPreview}
+          disabled={!name.trim() || contact.length < 10 || !avatarPreview}
         >
           Next
         </Button>
       </div>
 
-      {/* Crop Modal */}
       {showCropper && rawImage && (
         <div className="crop-modal-overlay" onClick={handleCropCancel}>
           <div className="crop-modal" onClick={(e) => e.stopPropagation()}>

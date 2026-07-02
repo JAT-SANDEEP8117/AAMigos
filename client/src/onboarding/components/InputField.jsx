@@ -22,6 +22,7 @@ export default function InputField({
   value,
   onChange,
   onBlur,
+  onFocus,
   placeholder = "",
   type = "text",
   disabled = false,
@@ -43,6 +44,7 @@ export default function InputField({
           value={value}
           onChange={onChange}
           onBlur={onBlur}
+          onFocus={onFocus}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}

@@ -56,3 +56,11 @@
 .ob-btn-row--end {
   justify-content: flex-end;
 }
+
+.ob-submit-error {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-top: 16px;
+  line-height: 1.4;
+  text-align: center;
+}

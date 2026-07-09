@@ -1,59 +1,121 @@
-# AAMigo’s - Smart Device Repair & Pickup Platform (Development Stage)
+# AAMigos
 
-AAMigo’s is a full-stack MERN-based service platform that connects users with repair service centers through pickup agents. It streamlines the device repair process by offering doorstep pickup, repair tracking, and secure delivery.
+AAMigos is a MERN stack smart device repair and pickup platform. It connects customers, pickup agents, service centers, and admins in one workflow for device repair requests, pickup tracking, catalog management, and project support through an AI chatbot.
 
-## How It Works:
+## Features
 
-1. Users request a device repair via the platform.
-2. Agents pick up the device and take it to a predefined service center.
-3. Repair status is updated in real-time.
-4. Users pay if required and approve the repair.
-
-Agents deliver the repaired device back to the user.
+- Customer, agent, and admin role-based dashboards
+- Email/password authentication with JWT
+- Customer onboarding with profile, address, and profile photo
+- Agent onboarding with profile, address, PAN, and Aadhaar details
+- Repair request creation with invoice PDF upload
+- Device category, company, model, and service center catalog flow
+- Agent request approval and repair status updates
+- Repair package selection workflow
+- Admin dashboard for stats, agents, service centers, companies, and device models
+- Groq-powered AAMigos chatbot for project-related help
+- MongoDB seed setup for default categories and the first admin account
+- Cloudinary-backed profile picture and invoice uploads
 
 ## Tech Stack
 
-- **Frontend:** React, Tailwind CSS, Vite
-- **Backend:** Node.js, Express, MongoDB, Mongoose
-- **Real-time updates:** Socket.io
-- **Validation:** Joi
+- Frontend: React, Vite, React Router, Zustand, Framer Motion
+- Backend: Node.js, Express.js, MongoDB, Mongoose
+- Auth: JWT and bcrypt
+- Uploads: Multer with Cloudinary storage
+- AI: Groq API
 
-## Installation
+## Project Structure
 
-### Prerequisites
-- Node.js and npm installed
-- MongoDB instance running
+```text
+AAmigos/
+  client/   React frontend
+  server/   Express/MongoDB backend
+  PROJECT_DOCUMENTATION.md
+  README.md
+```
 
-### Setup
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/yourusername/AAmigos.git
-   cd AAmigos
-   ```
-2. Install dependencies:
-   ```sh
-   npm install
-   ```
-3. Set up environment variables in a `.env` file.
-4. Start the development server:
-   ```sh
-   npm run dev
-   ```
+## Environment Setup
 
-## Usage
+Create `server/.env` from `server/.env.example`.
 
-- Users can create repair requests by entering device details and selecting a service center.
-- Agents review requests and approve or decline them.
-- Users and agents can communicate regarding service status.
-- Payments are processed through the platform if the device is not under warranty.
+Required server keys:
 
-## Roadmap
+```env
+MONGO_URI=
+JWT_SECRET=
+PORT=5000
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+GROQ_API_KEY=
+GROQ_MODEL=llama-3.1-8b-instant
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
+ADMIN_NAME=Admin
+```
 
-- Implement additional authentication methods
-- Enhance UI/UX with improved design
-- Add admin dashboard for managing service centers and agents
+Create `client/.env` only if you need to override the API URL:
 
-## Contributing
+```env
+VITE_API_URL=/api
+```
 
-Contributions are welcome. Please fork the repository and submit a pull request with your improvements.
+## Admin Login
 
+The first admin account is seeded from `server/.env` when the backend starts.
+
+Current configured admin:
+
+```text
+Email: jatsandeep275@gmail.com
+Password: Admin@123
+```
+
+## Run Locally
+
+Install dependencies:
+
+```bash
+npm run install:all
+```
+
+Run backend:
+
+```bash
+npm run dev:server
+```
+
+Run frontend:
+
+```bash
+npm run dev:client
+```
+
+Default URLs:
+
+- Frontend: `http://localhost:5173`
+- Backend health: `http://localhost:5000/api/health`
+
+## Verification
+
+Useful checks:
+
+```bash
+cd client
+npm run lint
+npm run build
+```
+
+```bash
+cd server
+node --check app.js
+```
+
+## Documentation
+
+See `PROJECT_DOCUMENTATION.md` for detailed project documentation, module explanations, current status, remaining work, and future updates.
+
+## Coming Soon
+
+Payment and transaction models are intentionally kept for future payment integration. Current payment gateway processing is not fully implemented yet.

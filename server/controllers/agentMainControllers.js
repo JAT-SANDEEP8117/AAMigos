@@ -1,6 +1,15 @@
 import Request from "../models/requests.js";
 import Agent from "../models/agents.js";
 
+const STATUS_FLOW = {
+  Approved: "PickedUp",
+  PickedUp: "FreeApproval",
+  FreeApproval: "InRepair",
+  InRepair: "Delivering",
+  Delivering: "Paid",
+  Paid: "Completed",
+};
+
 export const getPendingRequests = async (req, res) => {
   try {
     const pendingRequests = await Request.find({ status: "Pending" })
@@ -23,9 +32,13 @@ export const approveRequest = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
+    if (request.status !== "Pending") {
+      return res.status(400).json({ message: "Only pending requests can be approved" });
+    }
     request.status = "Approved";
     request.assignedAgent = req.agent._id;
     await request.save();
+    await Agent.findByIdAndUpdate(req.agent._id, { $addToSet: { assignedRequests: request._id } });
     res.status(200).json({ message: "Request approved successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -133,6 +146,9 @@ export const trackOrder = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
+    if (request.assignedAgent?.toString() !== req.agent._id.toString() && request.status !== "Pending") {
+      return res.status(403).json({ message: "Access denied" });
+    }
     res.status(200).json(request);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -145,6 +161,12 @@ export const updateStatus = async (req, res) => {
     const request = await Request.findById(reqId);
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
+    }
+    if (request.assignedAgent?.toString() !== req.agent._id.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    if (STATUS_FLOW[request.status] !== status) {
+      return res.status(400).json({ message: "Invalid status transition" });
     }
     request.status = status;
     await request.save();
@@ -162,12 +184,19 @@ export const packages = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
+    if (request.assignedAgent?.toString() !== req.agent._id.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
     const convertToMap = (list) => {
       const map = {};
       if (Array.isArray(list)) {
         list.forEach((item) => {
-          map[item.label.trim()] = item.price;
+          const label = item.label?.trim();
+          const price = Number(item.price);
+          if (label && Number.isFinite(price) && price >= 0) {
+            map[label] = price;
+          }
         });
       }
       return map;
@@ -196,6 +225,9 @@ export const getPackage = async (req, res) => {
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
     }
+    if (request.assignedAgent?.toString() !== req.agent._id.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
     res.status(200).json(request);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -208,6 +240,12 @@ export const freeService = async (req, res) => {
     const request = await Request.findById(reqId);
     if (!request) {
       return res.status(404).json({ message: "Request not found" });
+    }
+    if (request.assignedAgent?.toString() !== req.agent._id.toString()) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    if (request.status !== "FreeApproval") {
+      return res.status(400).json({ message: "Free service can only be approved during free service review" });
     }
     request.FreeService = true;
     await request.save();

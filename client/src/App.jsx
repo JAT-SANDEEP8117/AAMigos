@@ -14,6 +14,10 @@ import PendingRequestsPage from "./pages/agent/PendingRequestsPage";
 import OngoingRequestsPage from "./pages/agent/OngoingRequestsPage";
 import AssignedRequestsPage from "./pages/agent/AssignedRequestsPage";
 import AgentOrderDetail from "./pages/agent/AgentOrderDetail";
+import AdminHome from "./pages/admin/AdminHome";
+import AdminAgentsPage from "./pages/admin/AdminAgentsPage";
+import AdminServiceCentersPage from "./pages/admin/AdminServiceCentersPage";
+import AdminCatalogPage from "./pages/admin/AdminCatalogPage";
 import {
   ProtectedRoute,
   GuestRoute,
@@ -97,6 +101,22 @@ function App() {
           <Route path="ongoing" element={<OngoingRequestsPage />} />
           <Route path="assigned" element={<AssignedRequestsPage />} />
           <Route path="orders/:reqId" element={<AgentOrderDetail />} />
+        </Route>
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <RoleRoute role="admin">
+                <DashboardLayout role="admin" />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminHome />} />
+          <Route path="agents" element={<AdminAgentsPage />} />
+          <Route path="service-centers" element={<AdminServiceCentersPage />} />
+          <Route path="catalog" element={<AdminCatalogPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

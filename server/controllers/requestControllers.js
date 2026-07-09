@@ -4,6 +4,7 @@ import DeviceModel from "../models/deviceModels.js";
 import Company from "../models/companies.js";
 import DeviceCategory from "../models/deviceCategories.js";
 import ServiceCenter from "../models/serviceCenters.js";
+import User from "../models/users.js";
 
 export const getCategories = async (_req, res) => {
   try {
@@ -65,25 +66,22 @@ export const getRequests = async (req, res) => {
 export const postRequest = async (req, res) => {
   try {
     const { modelname, warranty, imeiNumber, issue } = req.body;
-    if (!modelname || !warranty || !imeiNumber || !issue || !req.file) {
+    const cleanedImei = imeiNumber?.trim();
+    const cleanedIssue = issue?.trim();
+
+    if (!modelname || !warranty || !cleanedImei || !cleanedIssue || !req.file) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const existingDevice = await Device.findOne({ imeiNumber: cleanedImei });
+    if (existingDevice) {
+      return res.status(400).json({ message: "A request already exists for this IMEI or serial number" });
     }
 
     const model = await DeviceModel.findOne({ name: modelname });
     if (!model) {
       return res.status(404).json({ message: "Device model not found" });
     }
-
-    const warrantyStatus = warranty === "Yes";
-
-    const newDevice = await Device.create({
-      imeiNumber,
-      model: model._id,
-      owner: req.userDetails.id,
-      warranty: warrantyStatus,
-      issue,
-      invoicePdfUrl: req.file.path,
-    });
 
     const company = await Company.findById(model.company);
     if (!company) {
@@ -95,12 +93,25 @@ export const postRequest = async (req, res) => {
       return res.status(404).json({ message: "No service center available for this device" });
     }
 
+    const warrantyStatus = warranty === "Yes";
+
+    const newDevice = await Device.create({
+      imeiNumber: cleanedImei,
+      model: model._id,
+      owner: req.userDetails.id,
+      warranty: warrantyStatus,
+      issue: cleanedIssue,
+      invoicePdfUrl: req.file.path,
+    });
+
     const newRequest = await Request.create({
       user: req.userDetails.id,
       device: newDevice._id,
       status: "Pending",
       selectedServiceCenter: serviceCenter._id,
     });
+
+    await User.findByIdAndUpdate(req.userDetails.id, { $addToSet: { requests: newRequest._id } });
 
     res.status(201).json(newRequest);
   } catch (error) {

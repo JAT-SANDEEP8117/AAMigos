@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   trackAgentOrder,
@@ -38,7 +38,7 @@ export default function AgentOrderDetail() {
     niceToHave: [emptyPackageRow()],
   });
 
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     setError("");
     try {
       const data = await trackAgentOrder(reqId);
@@ -48,11 +48,11 @@ export default function AgentOrderDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reqId]);
 
   useEffect(() => {
     loadOrder();
-  }, [reqId]);
+  }, [loadOrder]);
 
   const nextStatus = order ? AGENT_NEXT_STATUS[order.status] : null;
 

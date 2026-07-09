@@ -13,6 +13,7 @@ export default function OrangeBubble() {
 
   const isLogin = mode === "login";
   const isAgent = role === "agent";
+  const isAdmin = role === "admin";
 
   return (
     <div className="orange-panel__content">
@@ -30,23 +31,27 @@ export default function OrangeBubble() {
           }}
         >
           <h2 className="orange-panel__heading">
-            {isAgent ? "Hola, Agent" : "Hola, AAmigo"}
+            {isAdmin ? "Hola, Admin" : isAgent ? "Hola, Agent" : "Hola, AAmigo"}
           </h2>
           <p className="orange-panel__subtext">
-            {isLogin
+            {isAdmin
+              ? "Admin access is login only"
+              : isLogin
               ? isAgent
                 ? "New here? Create your agent account"
                 : "Not a User?"
               : "Already have an account?"}
           </p>
-          <button className="orange-panel__btn" onClick={toggleMode}>
-            {isLogin ? "Register" : "Log In"}
-          </button>
+          {!isAdmin && (
+            <button className="orange-panel__btn" onClick={toggleMode}>
+              {isLogin ? "Register" : "Log In"}
+            </button>
+          )}
         </motion.div>
       </AnimatePresence>
 
       <button className="orange-panel__switch" onClick={toggleRole}>
-        {isAgent ? "Are You A Customer ?" : "Are You An Agent ?"}
+        {isAgent ? "Are You A Customer ?" : role === "customer" ? "Admin Login ?" : "Are You An Agent ?"}
       </button>
     </div>
   );

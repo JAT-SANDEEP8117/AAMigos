@@ -180,6 +180,12 @@
   margin-bottom: 16px;
 }
 
+.dash-success {
+  color: #3fb950;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+
 .dash-loading {
   color: #8b949e;
   font-size: 0.85rem;
@@ -443,6 +449,13 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-weight: 600;
   color: #c45f2f;
+}
+
+.dash-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
 @media (max-width: 640px) {

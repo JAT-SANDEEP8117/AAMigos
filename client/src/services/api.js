@@ -39,7 +39,12 @@ export async function apiRequest(endpoint, options = {}) {
 }
 
 export async function login(role, email, password) {
-  const path = role === "agent" ? "/auth/agent/login" : "/auth/user/login";
+  const path =
+    role === "admin"
+      ? "/auth/admin/login"
+      : role === "agent"
+        ? "/auth/agent/login"
+        : "/auth/user/login";
   return apiRequest(path, {
     method: "POST",
     body: JSON.stringify({ email, password }),
@@ -47,6 +52,9 @@ export async function login(role, email, password) {
 }
 
 export async function register(role, email, password) {
+  if (role === "admin") {
+    throw new ApiError("Admin accounts are created from server configuration", 400);
+  }
   const path = role === "agent" ? "/auth/agent/register" : "/auth/user/register";
   return apiRequest(path, {
     method: "POST",
@@ -55,11 +63,20 @@ export async function register(role, email, password) {
 }
 
 export async function fetchProfile(role) {
-  const path = role === "agent" ? "/agent/getDetails" : "/customer/getDetails";
+  const path =
+    role === "admin"
+      ? "/admin/getDetails"
+      : role === "agent"
+        ? "/agent/getDetails"
+        : "/customer/getDetails";
   return apiRequest(path);
 }
 
 export function isProfileComplete(profile) {
+  if (localStorage.getItem("role") === "admin") {
+    return Boolean(profile?.email);
+  }
+
   const base =
     profile?.name &&
     profile?.phone &&
@@ -146,3 +163,39 @@ export const setOrderPackages = (reqId, packages) =>
 
 export const enableFreeService = (reqId) =>
   apiRequest(`/agent/freeService/${reqId}`, { method: "POST" });
+
+// Admin
+
+export const getAdminStats = () => apiRequest("/admin/stats");
+
+export const getAdminAgents = () => apiRequest("/admin/agents");
+
+export const getAdminServiceCenters = () => apiRequest("/admin/service-centers");
+
+export const createAdminServiceCenter = (payload) =>
+  apiRequest("/admin/service-centers", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const getAdminCatalog = () => apiRequest("/admin/catalog");
+
+export const createAdminCompany = (payload) =>
+  apiRequest("/admin/companies", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const createAdminModel = (payload) =>
+  apiRequest("/admin/models", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+// Chatbot
+
+export const sendChatbotMessage = (message, history) =>
+  apiRequest("/chatbot/message", {
+    method: "POST",
+    body: JSON.stringify({ message, history }),
+  });

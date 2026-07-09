@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import useAuthStore from "../store/authStore";
 import OrangeBubble from "./OrangeBubble";
@@ -13,11 +12,6 @@ const panelTransition = {
 export default function AuthPage() {
   const { mode } = useAuthStore();
   const isLogin = mode === "login";
-  const [isFirstRender, setIsFirstRender] = useState(true);
-
-  useEffect(() => {
-    setIsFirstRender(false);
-  }, []);
 
   const loginFrames = [
     "80px 0px 0px 80px",
@@ -29,16 +23,7 @@ export default function AuthPage() {
     "80px 80px 80px 80px",
     "80px 0px 0px 80px",
   ];
-  const loginEnd = "0px 80px 80px 0px";
-  const signupEnd = "80px 0px 0px 80px";
-
-  const borderRadiusAnim = isFirstRender
-    ? isLogin
-      ? loginEnd
-      : signupEnd
-    : isLogin
-      ? loginFrames
-      : signupFrames;
+  const borderRadiusAnim = isLogin ? loginFrames : signupFrames;
 
   return (
     <div className="auth-page">

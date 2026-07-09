@@ -3,6 +3,8 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import routes from "./routes/index.js";
+import { seedCatalog } from "./utils/seedCatalog.js";
+import { seedAdmin } from "./utils/seedAdmin.js";
 
 dotenv.config();
 
@@ -22,13 +24,13 @@ const connectDb = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Connected to MongoDB");
+    await seedCatalog();
+    await seedAdmin();
   } catch (error) {
     console.error("Error connecting to MongoDB:", error.message);
     process.exit(1);
   }
 };
-
-connectDb();
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
@@ -46,6 +48,8 @@ app.use((err, _req, res, _next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+await connectDb();
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -77,7 +77,7 @@ const EyeOffIcon = () => (
 export default function AuthForm() {
   const navigate = useNavigate();
   const { mode, role, loading, error, setAuth, setLoading, setError } = useAuthStore();
-  const isLogin = mode === "login";
+  const isLogin = mode === "login" || role === "admin";
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,7 +121,7 @@ export default function AuthForm() {
           style={{ width: "100%" }}
         >
           <h2 className="form-panel__title">
-            {isLogin ? "Log In" : "Sign Up"}
+            {role === "admin" ? "Admin Log In" : isLogin ? "Log In" : "Sign Up"}
           </h2>
 
           {error && <p className="auth-error">{error}</p>}

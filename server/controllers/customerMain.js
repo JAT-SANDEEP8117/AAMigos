@@ -212,6 +212,16 @@ export const updatePackage = async (req, res) => {
     const { reqId, name } = req.params;
     const request = await Request.findById(reqId);
     if (!verifyOrderOwner(request, req.userDetails.id, res)) return;
+    if (!["affordable", "goodToHave", "niceToHave"].includes(name)) {
+      return res.status(400).json({ message: "Invalid package selection" });
+    }
+    if (!["FreeApproval", "InRepair", "Delivering"].includes(request.status)) {
+      return res.status(400).json({ message: "Packages are not available for this order yet" });
+    }
+    const selectedPackage = request[name];
+    if (!selectedPackage || selectedPackage.size === 0) {
+      return res.status(400).json({ message: "Selected package is not available" });
+    }
     request.userPackage = name;
     await request.save();
     return res.status(200).json({ message: "Package updated successfully" });

@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/users.js";
 import Agent from "../models/agents.js";
+import Admin from "../models/admins.js";
 
 export const verifyToken = async (req, res, next) => {
   const authHeader = req.header("Authorization");
@@ -44,6 +45,20 @@ export const verifyUser = async (req, res, next) => {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(403).json({ message: "Access denied, customer only" });
     req.userDetails = user;
+    next();
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const verifyAdmin = async (req, res, next) => {
+  try {
+    if (req.user.role !== "admin" || !req.user.adminId) {
+      return res.status(403).json({ message: "Access denied, admin only" });
+    }
+    const admin = await Admin.findById(req.user.adminId);
+    if (!admin) return res.status(403).json({ message: "Access denied, admin only" });
+    req.admin = admin;
     next();
   } catch {
     res.status(500).json({ message: "Server error" });

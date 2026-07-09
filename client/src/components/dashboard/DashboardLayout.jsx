@@ -3,6 +3,7 @@ import useAuthStore from "../../store/authStore";
 import { fetchProfile } from "../../services/api";
 import { useEffect, useState } from "react";
 import logo from "../../assets/logo.svg";
+import ChatbotWidget from "./ChatbotWidget";
 import "./DashboardLayout.css";
 
 const CUSTOMER_LINKS = [
@@ -18,11 +19,18 @@ const AGENT_LINKS = [
   { to: "/agent/assigned", label: "All Assigned" },
 ];
 
+const ADMIN_LINKS = [
+  { to: "/admin", label: "Overview", end: true },
+  { to: "/admin/agents", label: "Agents" },
+  { to: "/admin/service-centers", label: "Service Centers" },
+  { to: "/admin/catalog", label: "Catalog" },
+];
+
 export default function DashboardLayout({ role }) {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
   const [profile, setProfile] = useState(null);
-  const links = role === "agent" ? AGENT_LINKS : CUSTOMER_LINKS;
+  const links = role === "admin" ? ADMIN_LINKS : role === "agent" ? AGENT_LINKS : CUSTOMER_LINKS;
 
   useEffect(() => {
     fetchProfile(role)
@@ -43,7 +51,7 @@ export default function DashboardLayout({ role }) {
           <div>
             <p className="dash-header__title">AAMigos</p>
             <p className="dash-header__role">
-              {role === "agent" ? "Agent Portal" : "Customer Portal"}
+              {role === "admin" ? "Admin Portal" : role === "agent" ? "Agent Portal" : "Customer Portal"}
             </p>
           </div>
         </div>
@@ -76,6 +84,7 @@ export default function DashboardLayout({ role }) {
       <main className="dash-main">
         <Outlet context={{ profile, role }} />
       </main>
+      <ChatbotWidget />
     </div>
   );
 }

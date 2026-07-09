@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   trackCustomerOrder,
@@ -23,7 +23,7 @@ export default function CustomerOrderDetail() {
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedPkg, setSelectedPkg] = useState("");
 
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     setError("");
     try {
       const data = await trackCustomerOrder(reqId);
@@ -41,11 +41,11 @@ export default function CustomerOrderDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reqId]);
 
   useEffect(() => {
     loadOrder();
-  }, [reqId]);
+  }, [loadOrder]);
 
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;

@@ -5,7 +5,7 @@ const storedRole = localStorage.getItem("role");
 
 const useAuthStore = create((set) => ({
   mode: "login",
-  role: storedRole === "customer" ? "customer" : "agent",
+  role: ["customer", "agent", "admin"].includes(storedRole) ? storedRole : "agent",
   token: storedToken,
   loading: false,
   error: "",
@@ -18,7 +18,8 @@ const useAuthStore = create((set) => ({
 
   toggleRole: () =>
     set((state) => ({
-      role: state.role === "agent" ? "customer" : "agent",
+      role: state.role === "agent" ? "customer" : state.role === "customer" ? "admin" : "agent",
+      mode: state.role === "customer" ? "login" : state.mode,
       error: "",
     })),
 

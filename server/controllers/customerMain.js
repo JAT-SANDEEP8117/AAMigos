@@ -215,8 +215,14 @@ export const updatePackage = async (req, res) => {
     if (!["affordable", "goodToHave", "niceToHave"].includes(name)) {
       return res.status(400).json({ message: "Invalid package selection" });
     }
-    if (!["FreeApproval", "InRepair", "Delivering"].includes(request.status)) {
+    if (request.status !== "FreeApproval") {
       return res.status(400).json({ message: "Packages are not available for this order yet" });
+    }
+    if (request.FreeService) {
+      return res.status(400).json({ message: "This order has been approved for free service" });
+    }
+    if (request.userPackage !== "Pending") {
+      return res.status(400).json({ message: "A repair package has already been selected" });
     }
     const selectedPackage = request[name];
     if (!selectedPackage || selectedPackage.size === 0) {

@@ -1,354 +1,228 @@
-# AAMigos Project Documentation
+# AAMigos — Project Documentation
 
-## Project Overview
+## 1. Purpose
 
-AAMigos is a MERN stack smart device repair and pickup platform. It connects customers who need device repair support with pickup agents and service centers. The application supports doorstep pickup, request tracking, agent workflow management, service catalog management, and an AAMigos-focused AI chatbot.
+AAMigos addresses a common repair-service problem: customers need a simple way to request a device pickup and understand repair progress, while pickup agents and service operators need a controlled workflow rather than disconnected calls and spreadsheets. The application provides one role-based system for submitting, assigning, tracking, and administering repair work.
 
-The project is built as an existing full-stack application and has been repaired and extended without rebuilding the architecture or changing the finalized UI theme.
+The implemented scope is repair pickup management for exactly three device categories: **Smartphones**, **Laptops**, and **Tablets**. It is designed for local development and demonstrations, not as a payment-processing or production operations system.
 
-## Tech Stack
-
-- Frontend: React, Vite, Zustand, React Router, Framer Motion, Tailwind CSS setup
-- Backend: Node.js, Express.js, MongoDB, Mongoose
-- Authentication: Email/password with JWT
-- Password hashing: bcrypt
-- File uploads: Multer with Cloudinary storage
-- AI chatbot: Groq API
-- Validation and API safety: Backend route guards and role checks
-
-## Application Roles
+## 2. Roles and capabilities
 
 ### Customer
 
-Customers can:
+- Register or log in using email and password.
+- Complete a profile with name, phone, address, and profile photo.
+- Select a supported device category and a predefined brand, or select **Other** and enter a brand manually.
+- Select an administrator-maintained device model, or enter a model manually when it is not listed.
+- Upload a purchase invoice PDF and submit a unique IMEI/serial-number repair request.
+- View all, pending, and active requests; cancel only pending requests.
+- Track the assigned agent and workflow status.
+- Select exactly one repair package during the free-service-review stage, unless an agent approves free service.
 
-- Register and log in using email/password.
-- Complete onboarding with profile details, address, and profile photo.
-- Create device repair pickup requests.
-- Upload invoice PDFs.
-- Select device category, company, and model.
-- Track repair status.
-- View all, pending, and active orders.
-- Cancel pending orders.
-- Select a repair package when an agent provides package options.
-- Use the AAMigos chatbot for project-related help.
+### Pickup agent
 
-### Agent
+- Register or log in, then complete profile, address, profile-photo, PAN, and Aadhaar onboarding.
+- Review all pending requests and approve one to assign it to themselves.
+- View ongoing and historical assigned jobs, including customer contact and pickup address.
+- Advance only their own requests through the defined lifecycle.
+- Set repair package options after pickup, approve free service during review, and begin repair only after a free-service approval or a customer package decision.
 
-Agents can:
+### Administrator
 
-- Register and log in using email/password.
-- Complete onboarding with profile details, address, profile photo, PAN, and Aadhaar.
-- View pending pickup requests.
-- Approve and assign requests to themselves.
-- View ongoing and assigned repair jobs.
-- Advance request status through the repair workflow.
-- Add repair package options.
-- Approve free warranty service during the free service review stage.
-- Use the AAMigos chatbot.
+- Log in using the account seeded from server configuration. Public admin registration is intentionally unavailable.
+- View counts for customers, agents, requests, service centers, companies, models, and status totals.
+- View agents and KYC completion.
+- Add companies, device models, and service centers. Models must belong to a company that supports the selected category; service centers must reference existing companies.
 
-### Admin
-
-Admins can:
-
-- Log in using the seeded admin credentials.
-- View platform overview stats.
-- View registered agents and KYC completion status.
-- View and add service centers.
-- View catalog data.
-- Add companies.
-- Add device models.
-- Manage the catalog data needed for customers to create repair requests.
-
-Admin registration is not public. Admin access is seeded from server environment variables.
-
-Current seeded admin:
+## 3. Repair workflow
 
 ```text
-Email: jatsandeep275@gmail.com
-Password: Admin@123
+Pending → Approved → PickedUp → FreeApproval → InRepair → Delivering → Paid → Completed
 ```
 
-## Authentication Flow
+Customers can move a request only from `Pending` to `Cancelled`. An agent can approve only `Pending` work, after which it is assigned to that agent. The API prevents an agent from advancing a request they do not own or skipping a state.
 
-The application uses JWT-based authentication.
+At `FreeApproval`, an agent either approves free service or provides package options. In the latter case, the customer must select one package before the agent can move the request to `InRepair`. Package values cannot be changed after that decision. `Paid` remains a workflow status only; no payment gateway, charge capture, or receipt flow is implemented.
 
-- Customer login: `/api/auth/user/login`
-- Customer register: `/api/auth/user/register`
-- Agent login: `/api/auth/agent/login`
-- Agent register: `/api/auth/agent/register`
-- Admin login: `/api/auth/admin/login`
+## 4. Device catalog and manual entries
 
-JWT tokens are stored in browser local storage along with the active role. Protected frontend routes redirect users based on their role.
+The backend seeds the supported categories and category-specific predefined brands on startup:
 
-Google authentication is not used. The project currently supports only email/password authentication.
+| Category | Seeded brands |
+| --- | --- |
+| Smartphones | Apple, Samsung, Google, OnePlus, Xiaomi, Oppo, Vivo, Realme, Motorola, Nothing |
+| Laptops | Apple, Dell, HP, Lenovo, Asus, Acer, Microsoft, MSI |
+| Tablets | Apple, Samsung, Lenovo, Xiaomi, Microsoft, Huawei |
 
-## Backend Architecture
+Administrators maintain named catalog models. A customer can still submit a device whose brand is not in the list by choosing `Other`, entering the brand, and entering the model. They can also enter a model for a known brand when it is not in the catalog. These custom entries are retained on the device record; they do not silently alter the managed catalog. Catalog-backed requests retain the associated model reference and use a linked service center when one exists. A manual-other-brand request is accepted without inventing a service center assignment.
 
-The backend is located in `server/`.
-
-Important folders:
-
-- `server/app.js`: Express app setup, MongoDB connection, seed setup, route mounting
-- `server/routes/`: API route definitions
-- `server/controllers/`: Business logic for each module
-- `server/models/`: Mongoose schemas
-- `server/middlewares/`: JWT and role protection middleware
-- `server/utils/`: Seed helpers for admin and catalog data
-
-### Main Backend Modules
-
-- Auth module
-- Customer module
-- Agent module
-- Admin module
-- Repair request module
-- Setup/onboarding module
-- Chatbot module
-- Cloudinary upload configuration
-
-## Frontend Architecture
-
-The frontend is located in `client/`.
-
-Important folders:
-
-- `client/src/App.jsx`: Main route setup
-- `client/src/components/`: Shared UI and auth components
-- `client/src/components/dashboard/`: Dashboard shell, cards, badges, chatbot widget
-- `client/src/pages/customer/`: Customer screens
-- `client/src/pages/agent/`: Agent screens
-- `client/src/pages/admin/`: Admin dashboard screens
-- `client/src/onboarding/`: Customer and agent onboarding flow
-- `client/src/services/api.js`: API helper methods
-- `client/src/store/`: Zustand auth and onboarding state
-- `client/src/utils/`: Shared order status helpers
-
-The existing dark/orange AAMigos UI theme is preserved.
-
-## Database Collections
-
-The application uses MongoDB with Mongoose models.
-
-Important collections:
-
-- `users`
-- `agents`
-- `admins`
-- `requests`
-- `devices`
-- `devicecategories`
-- `companies`
-- `devicemodels`
-- `servicecenters`
-- `transactions`
-- `devicestatusupdates`
-
-The transaction and device status update models are currently kept for future payment/status-history integration.
-
-## Repair Request Workflow
-
-Main request status flow:
+## 5. Architecture and project structure
 
 ```text
-Pending -> Approved -> PickedUp -> FreeApproval -> InRepair -> Delivering -> Paid -> Completed
+AAMigos/
+├── client/                         React/Vite single-page application
+│   └── src/
+│       ├── components/              Authentication, route guards, dashboard components
+│       ├── onboarding/              Customer/agent profile and KYC flow
+│       ├── pages/customer/          Customer dashboard and order views
+│       ├── pages/agent/             Agent dashboard and job views
+│       ├── pages/admin/             Admin dashboard and catalog screens
+│       ├── services/api.js          Authenticated API client
+│       ├── store/                   Zustand authentication/onboarding state
+│       └── utils/                   Status and device display helpers
+├── server/
+│   ├── controllers/                 API business rules
+│   ├── middlewares/                 JWT and role checks
+│   ├── models/                      Mongoose schemas
+│   ├── routes/                      Express endpoint definitions
+│   ├── utils/                       Catalog/admin/demo seed helpers
+│   ├── cloudConfig.js               Cloudinary Multer storage configuration
+│   └── app.js                       Application bootstrap and database connection
+├── README.md
+└── PROJECT_DOCUMENTATION.md
 ```
 
-Cancellation:
+The frontend uses React 19, React Router, Zustand, Framer Motion, Vite, and the existing Tailwind integration. The backend uses Node.js, Express, Mongoose, bcrypt, JSON Web Tokens, Multer, Cloudinary storage, dotenv, and the Groq HTTP API. No new packages are required for the application features documented here.
 
-```text
-Pending -> Cancelled
-```
+## 6. Authentication and authorization
 
-Important rules:
+Customer and agent registration hash passwords with bcrypt and immediately return a seven-day JWT. Login verifies the hash and returns the same role-bound token. Email values are normalized by the login/admin seed paths where applicable; users should enter a valid email address and at least a six-character password.
 
-- Customers can cancel only pending requests.
-- Agents can approve only pending requests.
-- Only the assigned agent can update an assigned request.
-- Status updates must follow the defined workflow.
-- Customers can select only valid package options added by the assigned agent.
+The frontend stores the token and role in browser local storage, sends the token as `Authorization: Bearer <token>`, protects routes, verifies a stored session by fetching the relevant profile, and redirects incomplete customer/agent profiles to onboarding. The backend independently verifies JWT signatures and verifies that the corresponding user, agent, or admin exists before allowing role-restricted actions. Frontend checks are only navigation conveniences; backend authorization is authoritative.
 
-## File Uploads
+## 7. Data model
 
-The project currently uses Cloudinary for uploads.
+- `User`: customer identity, password hash, profile picture, address, phone, and request references.
+- `Agent`: agent identity, password hash, profile/KYC fields, address, and assigned request references.
+- `Admin`: seeded administrator identity and password hash.
+- `DeviceCategory`: one of Smartphones, Laptops, Tablets and related companies.
+- `Company`: brand name with supported categories, models, and service centers.
+- `DeviceModel`: administrator-managed model, optional image URL, company, and category.
+- `Device`: serial/IMEI, uploaded invoice URL, optional catalog model, submitted brand/model names, category, warranty, issue, and owner.
+- `Request`: customer/device references, assigned agent/service center, status, free-service flag, package maps, chosen package, amount placeholders, and creation date.
+- `ServiceCenter`: name, companies, address, and optional contact number.
+- `Transaction` and `DeviceStatus`: existing future-oriented schemas; no routes currently use them.
 
-Used for:
+## 8. API reference
 
-- Profile pictures during onboarding
-- Invoice PDFs during repair request creation
+All routes are mounted below `/api`. Errors are JSON objects with a `message` field. All endpoints other than health and authentication require a valid Bearer token, and role restrictions are noted below.
 
-Cloudinary is required unless upload handling is changed to local or another storage provider.
+### Public and authentication
 
-## Groq AI Chatbot
+| Method | Route | Description |
+| --- | --- | --- |
+| GET | `/health` | Returns `{ status: "ok" }`. |
+| POST | `/auth/user/register` | Register customer. |
+| POST | `/auth/user/login` | Customer login. |
+| POST | `/auth/agent/register` | Register agent. |
+| POST | `/auth/agent/login` | Agent login. |
+| POST | `/auth/admin/login` | Seeded-admin login. |
 
-The chatbot is integrated through the backend so the Groq API key stays private.
+### Customer and onboarding
 
-Frontend:
+| Method | Route | Role | Description |
+| --- | --- | --- | --- |
+| POST | `/setup/user/setupProfile` | Customer | Multipart profile setup; `profilePic` plus profile/address fields. |
+| POST | `/setup/agent/setupProfile` | Agent | Multipart profile/KYC setup. |
+| GET | `/request/categories` | Customer | Supported categories only. |
+| GET | `/request/companies/:category` | Customer | Predefined brands for category. |
+| GET | `/request/models/:category/:company` | Customer | Catalog models for valid category/brand pairing. |
+| POST | `/request/newOrder` | Customer | Multipart repair request and `invoice` PDF. |
+| GET | `/customer/allOrders` | Customer | All own orders. |
+| GET | `/customer/pendingOrders` | Customer | Own pending orders. |
+| GET | `/customer/activeOrders` | Customer | Own active work. |
+| GET | `/customer/trackOrder/:reqId` | Customer | Own detailed order. |
+| POST | `/customer/cancelOrder/:reqId` | Customer | Cancel own pending order. |
+| GET | `/customer/getPackages/:reqId` | Customer | Own package options. |
+| POST | `/customer/updatePackage/:reqId/:name` | Customer | Select one valid package during review. |
 
-- Dashboard chatbot widget
-- Session-only conversation history
-- Loading and error states
-- UI consistent with current dashboard theme
+The existing `GET /customer/latestUnpaidOrder`, `GET /customer/getDetails`, `PUT /customer/updateDetails`, and `GET /customer/request/:reqId` endpoints are also mounted for authenticated customers. The dashboard currently uses the routes listed above.
 
-Backend:
+### Agent, admin, and chatbot
 
-- Protected chatbot route
-- Groq API request handling
-- AAMigos-specific system prompt
+| Method | Route | Role | Description |
+| --- | --- | --- | --- |
+| GET | `/agent/pendingRequests` | Agent | Pending requests available for approval. |
+| POST | `/agent/approveRequest/:reqId` | Agent | Atomically assigns a pending request. |
+| GET | `/agent/onGoingRequests` | Agent | Own nonterminal assigned jobs. |
+| GET | `/agent/allAssignedRequests` | Agent | Own assignment history. |
+| GET | `/agent/trackOrder/:reqId` | Agent | Own detailed job; pending work can be previewed. |
+| POST | `/agent/updateStatus/:reqId/update/:status` | Agent | Valid next-state transition only. |
+| POST | `/agent/packages/:reqId` | Agent | Set repair package rows before a decision. |
+| POST | `/agent/freeService/:reqId` | Agent | Approve free service during review. |
+| GET | `/admin/stats`, `/admin/agents`, `/admin/service-centers`, `/admin/catalog` | Admin | Administrative reads. |
+| POST | `/admin/service-centers`, `/admin/companies`, `/admin/models` | Admin | Administrative catalog writes. |
+| POST | `/chatbot/message` | Any authenticated role | AAMigos-only Groq help response. |
 
-The chatbot is intended to answer only AAMigos-related questions, including:
+## 9. Validation and uploads
 
-- Project overview
-- Features
-- Modules
-- User workflows
-- Use cases
-- FAQs
-- How application functionality works
+- Device category is server-restricted to the three supported types.
+- A catalog model submission is verified against the submitted model ID, model name, company, and category. This prevents same-name model ambiguity.
+- Other-brand and manually named models preserve the entered device identity; known brands are checked against their category.
+- IMEI/serial values are trimmed and unique across device records.
+- An invoice is required and must report MIME type `application/pdf`.
+- Profile photos are required for onboarding and must report an image MIME type.
+- Customer/agent phone numbers and PIN codes are validated as 10 and 6 digits. Agent PAN and Aadhaar follow the UI/server formats.
+- Package item labels are trimmed and nonnegative numeric prices are retained. Empty rows are ignored.
 
-For unrelated questions, it should politely respond that it only answers AAMigos project-related questions.
+Cloudinary-backed Multer storage uploads profile photos and invoices to the `aamigos_dev` folder. Cloudinary credentials are required for those flows.
 
-## Environment Variables
+## 10. Environment configuration
 
-### Server
+Copy `server/.env.example` to `server/.env` and set values privately. Do not put credentials in documentation, source control, client environment files, screenshots, or issue trackers.
 
-Create `server/.env` using `server/.env.example`.
-
-Required:
+Required server configuration:
 
 ```env
 MONGO_URI=
 JWT_SECRET=
-PORT=5000
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 GROQ_API_KEY=
-GROQ_MODEL=llama-3.1-8b-instant
 ADMIN_EMAIL=
 ADMIN_PASSWORD=
-ADMIN_NAME=Admin
 ```
 
-Notes:
+Optional values include `PORT` (defaults to 5000), `GROQ_MODEL`, `ADMIN_NAME`, and the existing optional demo customer/agent variables described in the environment example. Demo credentials are never documented as real values. The client uses the Vite `/api` proxy by default; the existing optional client demo variables only populate visible demo-login shortcuts when set.
 
-- `MONGO_URI` is required for MongoDB Atlas/local MongoDB.
-- `JWT_SECRET` should be a long secure random string.
-- Cloudinary keys are required for current upload functionality.
-- `GROQ_API_KEY` is required for the chatbot.
-- `GROQ_MODEL` can remain as the default unless a different Groq model is preferred.
-- `ADMIN_EMAIL` and `ADMIN_PASSWORD` seed the first admin account.
+## 11. Installation, running, and checks
 
-### Client
-
-Create `client/.env` only if the API URL needs to be overridden.
-
-```env
-VITE_API_URL=/api
-```
-
-## Setup and Run
-
-Install dependencies:
+From the repository root:
 
 ```bash
 npm run install:all
-```
-
-Run backend:
-
-```bash
 npm run dev:server
-```
-
-Run frontend:
-
-```bash
 npm run dev:client
 ```
 
-Default URLs:
+The frontend runs at `http://localhost:5173` and proxies `/api` to the backend at port 5000. The root `npm run dev` convenience command starts both where its declared development tool is available.
 
-- Frontend: `http://localhost:5173`
-- Backend health: `http://localhost:5000/api/health`
+Useful checks:
 
-## Completed Work
+```bash
+npm run lint --prefix client
+npm run build --prefix client
+node --check server/app.js
+```
 
-The following work has been completed:
+The project has no automated test suite configured. Manual verification should cover a new customer onboarding, a new agent onboarding, admin catalog/service-center creation, known-brand and Other-brand request submissions, agent approval, package decision/free service, status advancement, cancellation, route-role redirects, expired/invalid token handling, and chatbot error handling when a Groq key is unavailable.
 
-- Existing frontend and backend analyzed.
-- Email/password JWT authentication preserved.
-- Google authentication ignored/removed from scope.
-- MongoDB Atlas connection verified.
-- Groq API key/model verified.
-- Groq chatbot added.
-- Admin role added.
-- Admin dashboard added.
-- Admin account seeded and verified.
-- Default device categories seeded.
-- Frontend build verified.
-- Frontend lint verified.
-- Backend syntax verified.
-- Customer order creation made safer.
-- Agent assignment workflow fixed.
-- Request status transition validation added.
-- Customer package selection validation added.
-- Agent package input validation improved.
-- Admin catalog/service center management added.
-- Existing UI theme preserved.
+## 12. Security and operational notes
 
-## Remaining Work
+- Passwords are bcrypt hashes; JWT signing relies on a strong private `JWT_SECRET`.
+- Browser storage means users should log out on shared devices. A production deployment should prefer a reviewed session strategy appropriate to its threat model.
+- Role checks and request ownership checks are enforced on the server.
+- API keys remain server-side; the chatbot request is sent through Express rather than directly from the browser.
+- Current CORS is open for local development. Restrict allowed origins before deployment.
+- Add rate limiting, request logging, error monitoring, backup/recovery procedures, and automated tests before a production launch.
+- Validate file content and upload size at the storage edge for production; MIME checks alone are not a complete malware-control strategy.
 
-These items are not blockers for the current functional project, but should be handled before a production launch:
+## 13. Current limitations
 
-- Add full automated test coverage for backend APIs.
-- Add frontend component/integration tests.
-- Add stronger form validation messages for admin catalog forms.
-- Add edit/delete support for admin-managed companies, models, and service centers.
-- Add pagination/search for admin lists when data grows.
-- Add production CORS configuration for the deployed frontend domain.
-- Add rate limiting for auth and chatbot endpoints.
-- Add request logging and error monitoring.
-- Add a production deployment guide.
-- Confirm Cloudinary upload limits and folder organization for production.
-- Add backup/restore process for MongoDB.
-
-## Future Updates
-
-Suggested future roadmap:
-
-- Payment gateway integration.
-- Transaction history UI.
-- Payment status verification.
-- Customer payment page.
-- Invoice/payment receipts.
-- Device status history timeline using the existing status update model.
-- Admin dashboard charts and filters.
-- Agent performance analytics.
-- Customer notifications through email or SMS.
-- Forgot password flow with SMTP/email.
-- Role-based audit logs.
-- Service center edit/delete workflows.
-- More advanced chatbot knowledge grounded in live project data.
-- Production-ready deployment on cloud hosting.
-
-## Coming Soon
-
-Payment and transaction-related models currently exist as future-ready groundwork. They should remain in the codebase for later payment integration.
-
-Current payment-related functionality is not fully implemented as a real payment gateway. The status value `Paid` exists in the repair workflow, but actual payment processing is planned as a future update.
-
-## Final Status
-
-AAMigos is now functionally ready for local development and demo use with:
-
-- Customer dashboard
-- Agent dashboard
-- Admin dashboard
-- Repair request workflow
-- Catalog/service center management
-- Cloudinary uploads
-- MongoDB Atlas connection
-- Groq-powered AAMigos chatbot
-
-Before production deployment, complete the remaining production hardening items listed above.
+- No payment gateway, payment verification, receipts, or transaction UI exists. `Paid` is a workflow marker only.
+- No notifications, maps, dispatch optimization, edits/deletes for catalog entries, search/pagination, analytics, password reset, or audit log is implemented.
+- Service-center selection is automatic for catalog models when a linked center exists; there is no geographic routing or customer choice.
+- Custom Other-brand requests deliberately do not create a new global company/model/service-center record.
+- Transaction and device-status-history schemas are not yet integrated into the application.
+- The chatbot requires a valid Groq configuration and only answers AAMigos-related questions.

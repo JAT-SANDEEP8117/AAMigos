@@ -41,7 +41,9 @@ export function formatDate(dateStr) {
 }
 
 export function getDeviceName(order) {
-  return order?.device?.model?.name || "Unknown Device";
+  const device = order?.device;
+  if (!device) return "Unknown Device";
+  return [device.brandName, device.modelName].filter(Boolean).join(" ") || device.model?.name || "Unknown Device";
 }
 
 export function getDeviceImage(order) {

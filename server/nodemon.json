@@ -1,0 +1,6 @@
+{
+  "watch": ["app.js", "controllers", "middlewares", "models", "routes", "utils", "cloudConfig.js"],
+  "ext": "js,json",
+  "ignore": ["node_modules"],
+  "delay": "500"
+}

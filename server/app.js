@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import routes from "./routes/index.js";
 import { seedCatalog } from "./utils/seedCatalog.js";
 import { seedAdmin } from "./utils/seedAdmin.js";
+import { seedCustomer, seedAgent } from "./utils/seedAccounts.js";
 
 dotenv.config();
 
@@ -26,6 +27,8 @@ const connectDb = async () => {
     console.log("Connected to MongoDB");
     await seedCatalog();
     await seedAdmin();
+    await seedCustomer();
+    await seedAgent();
   } catch (error) {
     console.error("Error connecting to MongoDB:", error.message);
     process.exit(1);

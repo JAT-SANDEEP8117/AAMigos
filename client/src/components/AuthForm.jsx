@@ -165,6 +165,39 @@ export default function AuthForm() {
               {loading ? "Please wait..." : isLogin ? "Log In" : "Sign Up"}
             </button>
           </form>
+
+          {(import.meta.env.VITE_DEMO_CUSTOMER_EMAIL || import.meta.env.VITE_DEMO_AGENT_EMAIL) && (
+            <div className="auth-demo-hints">
+              {import.meta.env.VITE_DEMO_CUSTOMER_EMAIL && (
+                <button
+                  type="button"
+                  className="auth-demo-hint"
+                  onClick={() => {
+                    useAuthStore.getState().setRole("customer");
+                    useAuthStore.getState().setMode("login");
+                    setEmail(import.meta.env.VITE_DEMO_CUSTOMER_EMAIL);
+                    setPassword(import.meta.env.VITE_DEMO_CUSTOMER_PASSWORD || "");
+                  }}
+                >
+                  Use demo customer
+                </button>
+              )}
+              {import.meta.env.VITE_DEMO_AGENT_EMAIL && (
+                <button
+                  type="button"
+                  className="auth-demo-hint"
+                  onClick={() => {
+                    useAuthStore.getState().setRole("agent");
+                    useAuthStore.getState().setMode("login");
+                    setEmail(import.meta.env.VITE_DEMO_AGENT_EMAIL);
+                    setPassword(import.meta.env.VITE_DEMO_AGENT_PASSWORD || "");
+                  }}
+                >
+                  Use demo agent
+                </button>
+              )}
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     </>

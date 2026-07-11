@@ -15,6 +15,8 @@ export default function NewOrderPage() {
 
   const [category, setCategory] = useState("");
   const [company, setCompany] = useState("");
+  const [customCompany, setCustomCompany] = useState("");
+  const [modelId, setModelId] = useState("");
   const [modelname, setModelname] = useState("");
   const [warranty, setWarranty] = useState("No");
   const [imeiNumber, setImeiNumber] = useState("");
@@ -34,26 +36,33 @@ export default function NewOrderPage() {
     if (!category) {
       setCompanies([]);
       setCompany("");
+      setCustomCompany("");
+      setModelId("");
+      setModelname("");
       return;
     }
     getCompanies(category)
       .then((data) => {
         setCompanies(data);
         setCompany("");
+        setCustomCompany("");
+        setModelId("");
         setModelname("");
       })
       .catch(() => setCompanies([]));
   }, [category]);
 
   useEffect(() => {
-    if (!category || !company) {
+    if (!category || !company || company === "Other") {
       setModels([]);
+      setModelId("");
       setModelname("");
       return;
     }
     getModels(category, company)
       .then((data) => {
         setModels(data);
+        setModelId("");
         setModelname("");
       })
       .catch(() => setModels([]));
@@ -67,10 +76,17 @@ export default function NewOrderPage() {
       setError("Please upload your purchase invoice (PDF).");
       return;
     }
+    if ((company === "Other" && !customCompany.trim()) || ((company === "Other" || modelId === "manual") && !modelname.trim())) {
+      setError("Enter the brand and model name for your device.");
+      return;
+    }
 
     setLoading(true);
     try {
       const formData = new FormData();
+      formData.append("category", category);
+      formData.append("company", company === "Other" ? customCompany.trim() : company);
+      formData.append("modelId", company === "Other" ? "other" : modelId);
       formData.append("modelname", modelname);
       formData.append("warranty", warranty);
       formData.append("imeiNumber", imeiNumber.trim());
@@ -128,25 +144,54 @@ export default function NewOrderPage() {
                 {c.name}
               </option>
             ))}
+            <option value="Other">Other</option>
           </select>
         </div>
 
+        {company === "Other" && (
+          <div className="dash-form-group">
+            <label className="dash-form-label">Brand Name</label>
+            <input
+              className="dash-form-input"
+              value={customCompany}
+              onChange={(e) => setCustomCompany(e.target.value)}
+              placeholder="Enter the device brand"
+              required
+            />
+          </div>
+        )}
+
         <div className="dash-form-group">
           <label className="dash-form-label">Device Model</label>
-          <select
-            className="dash-form-select"
-            value={modelname}
-            onChange={(e) => setModelname(e.target.value)}
-            required
-            disabled={!company}
-          >
-            <option value="">Select model</option>
-            {models.map((m) => (
-              <option key={m._id} value={m.name}>
-                {m.name}
-              </option>
-            ))}
-          </select>
+          {company === "Other" || modelId === "manual" ? (
+            <input
+              className="dash-form-input"
+              value={modelname}
+              onChange={(e) => setModelname(e.target.value)}
+              placeholder="Enter the device model"
+              required
+            />
+          ) : (
+            <select
+              className="dash-form-select"
+              value={modelId}
+              onChange={(e) => {
+                const selected = models.find((model) => model._id === e.target.value);
+                setModelId(e.target.value);
+                setModelname(selected?.name || "");
+              }}
+              required
+              disabled={!company}
+            >
+              <option value="">Select model</option>
+              {models.map((m) => (
+                <option key={m._id} value={m._id}>
+                  {m.name}
+                </option>
+              ))}
+              <option value="manual">My model is not listed</option>
+            </select>
+          )}
         </div>
 
         <div className="dash-form-group">

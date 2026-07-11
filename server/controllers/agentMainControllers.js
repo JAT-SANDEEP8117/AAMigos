@@ -165,6 +165,13 @@ export const updateStatus = async (req, res) => {
     if (request.assignedAgent?.toString() !== req.agent._id.toString()) {
       return res.status(403).json({ message: "Access denied" });
     }
+    if (request.status === "FreeApproval" && status === "InRepair" && !request.FreeService) {
+      const hasPackages = [request.affordable, request.goodToHave, request.niceToHave]
+        .some((pkg) => pkg?.size > 0);
+      if (!hasPackages || request.userPackage === "Pending") {
+        return res.status(400).json({ message: "Set repair packages and wait for the customer selection before starting repair" });
+      }
+    }
     if (STATUS_FLOW[request.status] !== status) {
       return res.status(400).json({ message: "Invalid status transition" });
     }
@@ -186,6 +193,9 @@ export const packages = async (req, res) => {
     }
     if (request.assignedAgent?.toString() !== req.agent._id.toString()) {
       return res.status(403).json({ message: "Access denied" });
+    }
+    if (!["PickedUp", "FreeApproval"].includes(request.status) || request.userPackage !== "Pending" || request.FreeService) {
+      return res.status(400).json({ message: "Packages can only be set before the customer makes a repair decision" });
     }
 
     const convertToMap = (list) => {

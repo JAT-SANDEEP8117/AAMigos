@@ -80,7 +80,7 @@ export default function CustomerOrderDetail() {
 
   const currentIdx = ORDER_STATUSES.indexOf(order.status);
   const canCancel = order.status === "Pending";
-  const showPackages = packages?.packages && order.userPackage === "Pending";
+  const showPackages = packages?.packages && order.userPackage === "Pending" && !order.FreeService;
 
   const calcTotal = (items) =>
     items?.reduce((sum, item) => sum + (Number(item.price) || 0), 0) || 0;

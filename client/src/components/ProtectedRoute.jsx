@@ -3,6 +3,17 @@ import { Navigate, useParams } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import { fetchProfile, isProfileComplete } from "../services/api";
 
+const PROFILE_TIMEOUT_MS = 8000;
+
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out")), ms),
+    ),
+  ]);
+}
+
 export function ProtectedRoute({ children }) {
   const token = useAuthStore((state) => state.token);
   if (!token) {
@@ -13,10 +24,53 @@ export function ProtectedRoute({ children }) {
 
 export function GuestRoute({ children }) {
   const token = useAuthStore((state) => state.token);
-  if (token) {
+  const logout = useAuthStore((state) => state.logout);
+  const [ready, setReady] = useState(!token);
+  const [redirectTo, setRedirectTo] = useState(null);
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    let active = true;
     const role = localStorage.getItem("role") || "customer";
-    return <Navigate to={`/${role}`} replace />;
+
+    withTimeout(fetchProfile(role), PROFILE_TIMEOUT_MS)
+      .then(() => {
+        if (!active) return;
+        setRedirectTo(`/${role}`);
+      })
+      .catch(() => {
+        if (!active) return;
+        logout();
+        setReady(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [token, logout]);
+
+  if (!token) return children;
+  if (redirectTo) return <Navigate to={redirectTo} replace />;
+  if (!ready) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#8b949e",
+          fontFamily: "Poppins, sans-serif",
+        }}
+      >
+        Loading...
+      </div>
+    );
   }
+
   return children;
 }
 
@@ -58,26 +112,48 @@ export function RoleRoute({ role: requiredRole, children }) {
 
 export function ProfileGuard({ children }) {
   const role = localStorage.getItem("role") || "customer";
+  const logout = useAuthStore((state) => state.logout);
   const [ready, setReady] = useState(false);
   const [redirect, setRedirect] = useState(null);
 
   useEffect(() => {
-    fetchProfile(role)
+    let active = true;
+
+    withTimeout(fetchProfile(role), PROFILE_TIMEOUT_MS)
       .then((profile) => {
+        if (!active) return;
         if (!isProfileComplete(profile)) {
           setRedirect(`/${role}/onboarding/profile`);
         } else {
           setReady(true);
         }
       })
-      .catch(() => setReady(true));
-  }, [role]);
+      .catch(() => {
+        if (!active) return;
+        logout();
+        setRedirect("/");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [role, logout]);
 
   if (redirect) return <Navigate to={redirect} replace />;
   if (!ready) {
     return (
-      <div className="dash-layout" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p className="dash-loading">Loading...</p>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0e1117",
+          color: "#8b949e",
+          fontFamily: "Poppins, sans-serif",
+        }}
+      >
+        Loading...
       </div>
     );
   }

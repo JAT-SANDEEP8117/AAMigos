@@ -10,6 +10,12 @@ export const setupUser = async (req, res) => {
     if (!name || !phone || !dno || !street || !city || !pincode) {
       return res.status(400).json({ message: "All profile fields are required" });
     }
+    if (!/^\d{10}$/.test(phone) || !/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ message: "Enter a valid 10-digit phone number and 6-digit pincode" });
+    }
+    if (!req.file.mimetype?.startsWith("image/")) {
+      return res.status(400).json({ message: "Profile picture must be an image" });
+    }
 
     const user = await User.findById(req.user.userId);
     if (!user) {
@@ -35,6 +41,12 @@ export const setupAgent = async (req, res) => {
     }
     if (!name || !phone || !dno || !street || !city || !pincode || !panCard || !adhaarNumber) {
       return res.status(400).json({ message: "All profile fields are required" });
+    }
+    if (!/^\d{10}$/.test(phone) || !/^\d{6}$/.test(pincode) || !/^[A-Z]{5}\d{4}[A-Z]$/.test(panCard) || !/^\d{12}$/.test(adhaarNumber)) {
+      return res.status(400).json({ message: "Enter valid contact, address, PAN, and Aadhaar details" });
+    }
+    if (!req.file.mimetype?.startsWith("image/")) {
+      return res.status(400).json({ message: "Profile picture must be an image" });
     }
 
     const agent = await Agent.findById(req.user.agentId);

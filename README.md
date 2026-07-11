@@ -1,121 +1,22 @@
 # AAMigos
 
-AAMigos is a MERN stack smart device repair and pickup platform. It connects customers, pickup agents, service centers, and admins in one workflow for device repair requests, pickup tracking, catalog management, and project support through an AI chatbot.
+AAMigos is a full-stack device-repair pickup platform for Smartphones, Laptops, and Tablets. Customers submit a repair request, pickup agents manage the repair lifecycle, and administrators maintain the supported catalog and service-center directory.
 
-## Features
+## What it includes
 
-- Customer, agent, and admin role-based dashboards
-- Email/password authentication with JWT
-- Customer onboarding with profile, address, and profile photo
-- Agent onboarding with profile, address, PAN, and Aadhaar details
-- Repair request creation with invoice PDF upload
-- Device category, company, model, and service center catalog flow
-- Agent request approval and repair status updates
-- Repair package selection workflow
-- Admin dashboard for stats, agents, service centers, companies, and device models
-- Groq-powered AAMigos chatbot for project-related help
-- MongoDB seed setup for default categories and the first admin account
-- Cloudinary-backed profile picture and invoice uploads
+- JWT email/password authentication for customer, agent, and admin roles
+- Profile onboarding, address collection, agent PAN/Aadhaar validation, and Cloudinary profile-photo uploads
+- Repair request creation with a PDF invoice, predefined category-specific brands, a manual **Other** brand, and a manual model fallback
+- Customer order tracking, pending-order cancellation, and repair-package selection
+- Agent approval, assignment, package configuration, free-service approval, and controlled status progression
+- Admin statistics, agent visibility, companies/models, and service-center management
+- Protected Groq-backed AAMigos help chatbot
 
-## Tech Stack
+## Run locally
 
-- Frontend: React, Vite, React Router, Zustand, Framer Motion
-- Backend: Node.js, Express.js, MongoDB, Mongoose
-- Auth: JWT and bcrypt
-- Uploads: Multer with Cloudinary storage
-- AI: Groq API
+1. Create `server/.env` from `server/.env.example` and provide the required MongoDB, JWT, Cloudinary, Groq, and admin values. Do not commit that file.
+2. Install the existing workspace dependencies with `npm run install:all`.
+3. Run the backend with `npm run dev:server` and the frontend with `npm run dev:client` (or use the root `npm run dev` script if its already-declared tooling is installed).
+4. Open `http://localhost:5173`; the health endpoint is `http://localhost:5000/api/health`.
 
-## Project Structure
-
-```text
-AAmigos/
-  client/   React frontend
-  server/   Express/MongoDB backend
-  PROJECT_DOCUMENTATION.md
-  README.md
-```
-
-## Environment Setup
-
-Create `server/.env` from `server/.env.example`.
-
-Required server keys:
-
-```env
-MONGO_URI=
-JWT_SECRET=
-PORT=5000
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-GROQ_API_KEY=
-GROQ_MODEL=llama-3.1-8b-instant
-ADMIN_EMAIL=
-ADMIN_PASSWORD=
-ADMIN_NAME=Admin
-```
-
-Create `client/.env` only if you need to override the API URL:
-
-```env
-VITE_API_URL=/api
-```
-
-## Admin Login
-
-The first admin account is seeded from `server/.env` when the backend starts.
-
-Current configured admin:
-
-```text
-Email: jatsandeep275@gmail.com
-Password: Admin@123
-```
-
-## Run Locally
-
-Install dependencies:
-
-```bash
-npm run install:all
-```
-
-Run backend:
-
-```bash
-npm run dev:server
-```
-
-Run frontend:
-
-```bash
-npm run dev:client
-```
-
-Default URLs:
-
-- Frontend: `http://localhost:5173`
-- Backend health: `http://localhost:5000/api/health`
-
-## Verification
-
-Useful checks:
-
-```bash
-cd client
-npm run lint
-npm run build
-```
-
-```bash
-cd server
-node --check app.js
-```
-
-## Documentation
-
-See `PROJECT_DOCUMENTATION.md` for detailed project documentation, module explanations, current status, remaining work, and future updates.
-
-## Coming Soon
-
-Payment and transaction models are intentionally kept for future payment integration. Current payment gateway processing is not fully implemented yet.
+The backend seeds the three supported categories and their predefined brand choices when it connects. Administrators add catalog models and service centers as needed. See [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) for the implemented architecture, routes, validation rules, workflows, and limitations.

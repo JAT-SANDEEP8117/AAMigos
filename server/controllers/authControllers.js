@@ -19,16 +19,17 @@ const validateCredentials = (email, password, res) => {
 export const registerUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!validateCredentials(email, password, res)) return;
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!validateCredentials(normalizedEmail, password, res)) return;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const newUser = new User({ email, password: hashedPassword });
+    const newUser = new User({ email: normalizedEmail, password: hashedPassword });
     await newUser.save();
 
     const token = jwt.sign(
@@ -45,11 +46,12 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -73,16 +75,17 @@ export const loginUser = async (req, res) => {
 export const registerAgent = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!validateCredentials(email, password, res)) return;
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!validateCredentials(normalizedEmail, password, res)) return;
 
-    const existingAgent = await Agent.findOne({ email });
+    const existingAgent = await Agent.findOne({ email: normalizedEmail });
     if (existingAgent) {
       return res.status(400).json({ message: "Agent already exists" });
     }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const newAgent = new Agent({ email, password: hashedPassword });
+    const newAgent = new Agent({ email: normalizedEmail, password: hashedPassword });
     await newAgent.save();
 
     const token = jwt.sign(
@@ -99,11 +102,12 @@ export const registerAgent = async (req, res) => {
 export const loginAgent = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const agent = await Agent.findOne({ email });
+    const agent = await Agent.findOne({ email: normalizedEmail });
     if (!agent) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

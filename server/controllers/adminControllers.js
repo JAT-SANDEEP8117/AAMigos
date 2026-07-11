@@ -76,6 +76,13 @@ export const createServiceCenter = async (req, res) => {
     if (!name?.trim() || !city?.trim() || !street?.trim() || !pincode?.trim() || companies.length === 0) {
       return res.status(400).json({ message: "Name, city, address, pincode, and company are required" });
     }
+    if (!/^\d{6}$/.test(pincode.trim())) {
+      return res.status(400).json({ message: "Pincode must be exactly 6 digits" });
+    }
+    const validCompanyCount = await Company.countDocuments({ _id: { $in: companies } });
+    if (validCompanyCount !== companies.length) {
+      return res.status(400).json({ message: "Select a valid company" });
+    }
 
     const serviceCenter = await ServiceCenter.create({
       name: name.trim(),
@@ -123,6 +130,14 @@ export const createCompany = async (req, res) => {
     if (!name?.trim() || categories.length === 0) {
       return res.status(400).json({ message: "Company name and category are required" });
     }
+    const validCategoryCount = await DeviceCategory.countDocuments({ _id: { $in: categories } });
+    if (validCategoryCount !== categories.length) {
+      return res.status(400).json({ message: "Select a valid device category" });
+    }
+    const existingCompany = await Company.findOne({ name: new RegExp(`^${name.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") });
+    if (existingCompany) {
+      return res.status(400).json({ message: "Company already exists" });
+    }
 
     const company = await Company.create({ name: name.trim(), categories });
     await DeviceCategory.updateMany(
@@ -145,6 +160,15 @@ export const createModel = async (req, res) => {
 
     if (!name?.trim() || !companyId || !categoryId) {
       return res.status(400).json({ message: "Model name, company, and category are required" });
+    }
+    const company = await Company.findById(companyId);
+    const category = await DeviceCategory.findById(categoryId);
+    if (!company || !category || !company.categories.some((id) => id.toString() === categoryId)) {
+      return res.status(400).json({ message: "Select a company available for the chosen category" });
+    }
+    const existingModel = await DeviceModel.findOne({ name: name.trim(), company: companyId, category: categoryId });
+    if (existingModel) {
+      return res.status(400).json({ message: "This device model already exists" });
     }
 
     const model = await DeviceModel.create({

@@ -148,6 +148,31 @@
   line-height: 1.4;
 }
 
+.auth-demo-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.auth-demo-hint {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #8b949e;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-demo-hint:hover {
+  color: #e6edf3;
+  border-color: rgba(196, 95, 47, 0.35);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 700px) {
   .form-panel {

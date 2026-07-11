@@ -19,4 +19,4 @@ AAMigos is a full-stack device-repair pickup platform for Smartphones, Laptops, 
 3. Run the backend with `npm run dev:server` and the frontend with `npm run dev:client` (or use the root `npm run dev` script if its already-declared tooling is installed).
 4. Open `http://localhost:5173`; the health endpoint is `http://localhost:5000/api/health`.
 
-The backend seeds the three supported categories and their predefined brand choices when it connects. Administrators add catalog models and service centers as needed. See [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) for the implemented architecture, routes, validation rules, workflows, and limitations.
+The backend seeds the three supported categories, their predefined brand choices, and a concise set of commonly requested device models when it connects. Seeded cards use category-appropriate remote imagery; administrators can add further catalog models and service centers as needed. See [PROJECT_DOCUMENTATION.md](PROJECT_DOCUMENTATION.md) for the implemented architecture, routes, validation rules, workflows, and limitations.

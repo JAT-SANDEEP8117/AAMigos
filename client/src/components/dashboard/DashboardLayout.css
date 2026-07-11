@@ -469,3 +469,84 @@
     justify-content: space-between;
   }
 }
+
+/* Shared finishing details: preserve the existing dark/orange identity while
+   improving tactile feedback, readable compact layouts, and keyboard access. */
+.dash-header {
+  padding-inline: clamp(16px, 4vw, 32px);
+}
+
+.dash-nav {
+  padding-inline: clamp(16px, 4vw, 32px);
+}
+
+.dash-main {
+  max-width: 1040px;
+}
+
+.dash-stat,
+.dash-detail-card {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.dash-detail-row {
+  line-height: 1.45;
+}
+
+.dash-btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.dash-btn--ghost:hover:not(:disabled) {
+  border-color: rgba(196, 95, 47, 0.35);
+  background: rgba(196, 95, 47, 0.08);
+}
+
+.dash-form-input:focus,
+.dash-form-select:focus,
+.dash-form-textarea:focus {
+  box-shadow: 0 0 0 3px rgba(196, 95, 47, 0.13);
+}
+
+.dash-package {
+  color: #e6edf3;
+  text-align: left;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.dash-package:hover {
+  transform: translateY(-1px);
+}
+
+.dash-btn:focus-visible,
+.dash-tab:focus-visible,
+.dash-nav__link:focus-visible,
+.dash-package:focus-visible,
+.dash-header__logout:focus-visible {
+  outline: 2px solid #fb923c;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .dash-main {
+    padding: 20px 14px 42px;
+  }
+
+  .dash-detail-card {
+    padding: 18px;
+  }
+
+  .dash-detail-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .dash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dash-actions .dash-btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}

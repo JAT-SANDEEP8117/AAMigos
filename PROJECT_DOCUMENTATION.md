@@ -54,6 +54,8 @@ The backend seeds the supported categories and category-specific predefined bran
 | Laptops | Apple, Dell, HP, Lenovo, Asus, Acer, Microsoft, MSI |
 | Tablets | Apple, Samsung, Lenovo, Xiaomi, Microsoft, Huawei |
 
+The initial catalog also seeds 14 common models: iPhone 15, Galaxy S24, Pixel 8, OnePlus 12, Xiaomi 14; MacBook Air, XPS 13, Pavilion 15, ThinkPad E14, VivoBook 15; and iPad Air, Galaxy Tab S9, Tab P12, and Pad 6. Seed data uses idempotent database updates, so normal restarts do not create duplicates. Each seeded model includes a compact category-appropriate image served from Unsplash for useful order-card context.
+
 Administrators maintain named catalog models. A customer can still submit a device whose brand is not in the list by choosing `Other`, entering the brand, and entering the model. They can also enter a model for a known brand when it is not in the catalog. These custom entries are retained on the device record; they do not silently alter the managed catalog. Catalog-backed requests retain the associated model reference and use a linked service center when one exists. A manual-other-brand request is accepted without inventing a service center assignment.
 
 ## 5. Architecture and project structure
